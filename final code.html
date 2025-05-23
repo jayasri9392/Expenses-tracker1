@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Expense Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      text-align: center;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+    .container {
+      width: 90%;
+      max-width: 400px;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0px 0px 10px gray;
+      display: none;
+      position: relative;
+    }
+    input, button, select {
+      width: 90%;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 5px;
+    }
+    button {
+      background: #28a745;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #218838;
+    }
+    .icon, .avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      cursor: pointer;
+      margin: 10px;
+    }
+    .avatar {
+      border: 2px solid transparent;
+    }
+    .selected {
+      border: 3px solid blue;
+    }
+    .icons-container {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+    }
+    canvas {
+      max-width: 100%;
+      margin-top: 20px;
+    }
+    #logout-icon {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 24px;
+      cursor: pointer;
+      color: #dc3545;
+    }
+    #logout-icon:hover {
+      color: #c82333;
+    }
+    ul {
+      padding-left: 20px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+
+<!-- HOME PAGE -->
+<div class="container" id="home-page">
+  <h2>Welcome to Expense Tracker</h2>
+  <button onclick="showSignup()">Sign Up</button>
+  <button onclick="showLogin()">Login</button>
+</div>
+
+<!-- SIGNUP PAGE -->
+<div class="container" id="signup-page">
+  <h2>Sign Up</h2>
+  <form id="signup-form">
+    <input type="text" id="signupUsername" placeholder="Username" required>
+    <input type="password" id="signupPassword" placeholder="Password" required>
+    <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+    <button type="submit">Sign Up</button>
+  </form>
+  <p>Already have an account? <a onclick="showLogin()">Login here</a></p>
+</div>
+
+<!-- LOGIN PAGE -->
+<div class="container" id="login-page">
+  <h2>Login</h2>
+  <form id="login-form">
+    <input type="text" id="loginUsername" placeholder="Username" required>
+    <input type="password" id="loginPassword" placeholder="Password" required>
+    <button type="submit">Login</button>
+  </form>
+  <p>Don't have an account? <a onclick="showSignup()">Sign up here</a></p>
+</div>
+
+<!-- AVATAR PAGE -->
+<div class="container" id="avatar-page">
+  <h2>Select Your Avatar</h2>
+  <div>
+    <img src="https://cdn-icons-png.flaticon.com/512/147/147142.png" class="avatar" onclick="selectAvatar(this)">
+    <img src="https://cdn-icons-png.flaticon.com/512/147/147144.png" class="avatar" onclick="selectAvatar(this)">
+    <img src="https://cdn-icons-png.flaticon.com/512/168/168734.png" class="avatar" onclick="selectAvatar(this)">
+    <img src="https://cdn-icons-png.flaticon.com/512/2922/2922561.png" class="avatar" onclick="selectAvatar(this)">
+  </div>
+  <button id="proceed-btn" disabled onclick="goToDashboard()">Proceed</button>
+</div>
+
+<!-- DASHBOARD -->
+<div class="container" id="dashboard">
+    <div id="logout-icon" onclick="logout()">⎋<br><span style="font-size: 12px;">Logout</span></div>
+
+  <h2>Expense Tracker</h2>
+  <div class="profile">
+    <img id="profile-avatar" class="avatar">
+    <h3 id="user-name">User</h3>
+  </div>
+  <div>
+    <label for="monthSelector">Month:</label>
+    <select id="monthSelector" onchange="changeMonth()"></select>
+  </div>
+  <div class="icons-container">
+    <div class="icon" onclick="showPage('salary-page')">💵 Salary</div>
+    <div class="icon" onclick="showPage('savings-page')">💰 Savings</div>
+    <div class="icon" onclick="showPage('expenses-page')">📉 Expenses</div>
+    <div class="icon" onclick="showPage('balance-page')">💳 Balance</div>
+  </div>
+  <canvas id="expenseChart"></canvas>
+</div>
+
+<!-- SALARY PAGE -->
+<div class="container" id="salary-page">
+    <div id="logout-icon" onclick="logout()">⎋<br><span style="font-size: 12px;">Logout</span></div>
+
+  <h2>💵 Salary</h2>
+  <input type="number" id="salaryAmount" placeholder="Enter Salary Amount" />
+  <button onclick="addToCategory('Salary', 'salaryAmount')">Add</button>
+  <button onclick="showDashboard()">Back to Dashboard</button>
+</div>
+
+<!-- SAVINGS PAGE -->
+<div class="container" id="savings-page">
+  <div id="logout-icon" onclick="logout()">⎋<br><span style="font-size: 12px;">Logout</span></div>
+
+  <h2>💰 Savings</h2>
+  <input type="number" id="savingsAmount" placeholder="Enter Savings Amount" />
+  <button onclick="addToCategory('Savings', 'savingsAmount')">Add</button>
+  <button onclick="showDashboard()">Back to Dashboard</button>
+</div>
+
+<!-- EXPENSES PAGE -->
+<div class="container" id="expenses-page">
+    <div id="logout-icon" onclick="logout()">⎋<br><span style="font-size: 12px;">Logout</span></div>
+
+  <h2>📉 Expenses</h2>
+  <input type="text" id="expenseItem" placeholder="Expense Item (e.g., Groceries)" />
+  <input type="number" id="expenseAmount" placeholder="Amount (e.g., 200)" />
+  <button onclick="addExpenseItem()">Add Expense</button>
+  <div id="expenseList"></div>
+  <button onclick="showDashboard()">Back to Dashboard</button>
+</div>
+
+<!-- BALANCE PAGE -->
+<div class="container" id="balance-page">
+    <div id="logout-icon" onclick="logout()">⎋<br><span style="font-size: 12px;">Logout</span></div>
+
+  <h2>💳 Balance</h2>
+  <p id="balanceDisplay"></p>
+  <button onclick="showDashboard()">Back to Dashboard</button>
+</div>
+
+<script>
+  let selectedAvatar = null;
+  let chart;
+  let selectedMonthKey = getCurrentMonthKey();
+  let expenseDataByMonth = {};
+
+  function getCurrentMonthKey() {
+    const now = new Date();
+    return ${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')};
+  }
+
+  function populateMonthSelector() {
+    const selector = document.getElementById("monthSelector");
+    selector.innerHTML = "";
+    const months = Object.keys(expenseDataByMonth).sort().reverse();
+    months.forEach(month => {
+      const option = document.createElement("option");
+      option.value = month;
+      option.text = month;
+      if (month === selectedMonthKey) option.selected = true;
+      selector.appendChild(option);
+    });
+  }
+
+  function changeMonth() {
+    selectedMonthKey = document.getElementById("monthSelector").value;
+    updateChart();
+    updateExpenseList();
+  }
+
+  function showHomePage() { displayPage("home-page"); }
+  function showSignup() { displayPage("signup-page"); }
+  function showLogin() { displayPage("login-page"); }
+  function showAvatarPage() { displayPage("avatar-page"); }
+  function showDashboard() { displayPage("dashboard"); updateDashboard(); }
+  function showPage(pageId) {
+    displayPage(pageId);
+    if (pageId === "balance-page") updateBalance();
+    if (pageId === "expenses-page") updateExpenseList();
+  }
+
+  function displayPage(id) {
+    document.querySelectorAll('.container').forEach(c => c.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+  }
+
+  function selectAvatar(img) {
+    document.querySelectorAll('.avatar').forEach(a => a.classList.remove('selected'));
+    img.classList.add('selected');
+    selectedAvatar = img.src;
+    document.getElementById("proceed-btn").disabled = false;
+  }
+
+  function goToDashboard() {
+    if (!selectedAvatar) return alert("Please select an avatar!");
+    localStorage.setItem("avatar", selectedAvatar);
+    showDashboard();
+  }
+
+  function updateDashboard() {
+    document.getElementById("profile-avatar").src = localStorage.getItem("avatar");
+    document.getElementById("user-name").textContent = localStorage.getItem("loggedInUser");
+    loadExpenseData();
+    populateMonthSelector();
+    initChart();
+  }
+
+  function addToCategory(category, inputId) {
+    const amount = parseFloat(document.getElementById(inputId).value);
+    if (isNaN(amount) || amount <= 0) return alert("Enter a valid amount!");
+
+    if (!expenseDataByMonth[selectedMonthKey]) {
+      expenseDataByMonth[selectedMonthKey] = { Salary: 0, Savings: 0, Expenses: 0, ExpenseItems: [] };
+    }
+
+    expenseDataByMonth[selectedMonthKey][category] += amount;
+    saveExpenseData();
+    updateChart();
+    document.getElementById(inputId).value = '';
+  }
+
+  function addExpenseItem() {
+    const item = document.getElementById("expenseItem").value.trim();
+    const amount = parseFloat(document.getElementById("expenseAmount").value);
+
+    if (!item || isNaN(amount) || amount <= 0) {
+      return alert("Please enter a valid item and amount!");
+    }
+
+    if (!expenseDataByMonth[selectedMonthKey]) {
+      expenseDataByMonth[selectedMonthKey] = { Salary: 0, Savings: 0, Expenses: 0, ExpenseItems: [] };
+    }
+
+    expenseDataByMonth[selectedMonthKey].ExpenseItems.push({ item, amount });
+    expenseDataByMonth[selectedMonthKey].Expenses += amount;
+
+    saveExpenseData();
+    updateChart();
+    updateExpenseList();
+    document.getElementById("expenseItem").value = "";
+    document.getElementById("expenseAmount").value = "";
+  }
+
+  function updateExpenseList() {
+    const expenseListDiv = document.getElementById("expenseList");
+    const data = expenseDataByMonth[selectedMonthKey];
+    const items = data?.ExpenseItems || [];
+
+    if (items.length === 0) {
+      expenseListDiv.innerHTML = "<p>No expenses added.</p>";
+      return;
+    }
+
+    expenseListDiv.innerHTML = `
+      <h4>Expense Items:</h4>
+      <ul>${items.map(e => <li>${e.item}: $${e.amount.toFixed(2)}</li>).join("")}</ul>
+    `;
+  }
+
+  function updateBalance() {
+    const data = expenseDataByMonth[selectedMonthKey];
+    const balance = (data?.Salary || 0) + (data?.Savings || 0) - (data?.Expenses || 0);
+    document.getElementById("balanceDisplay").textContent = $${balance.toFixed(2)};
+  }
+
+  function saveExpenseData() {
+    localStorage.setItem("expenseDataByMonth", JSON.stringify(expenseDataByMonth));
+  }
+
+  function loadExpenseData() {
+    const saved = JSON.parse(localStorage.getItem("expenseDataByMonth"));
+    if (saved) expenseDataByMonth = saved;
+    if (!expenseDataByMonth[selectedMonthKey]) {
+      expenseDataByMonth[selectedMonthKey] = { Salary: 0, Savings: 0, Expenses: 0, ExpenseItems: [] };
+    }
+  }
+
+  function initChart() {
+    const ctx = document.getElementById("expenseChart").getContext('2d');
+    if (chart) chart.destroy();
+    chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Salary', 'Savings', 'Expenses', 'Balance'],
+        datasets: [{
+          label: Amount for ${selectedMonthKey},
+          data: getChartDataForMonth(),
+          backgroundColor: ['green', 'orange', 'red', 'blue']
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  function updateChart() {
+    const data = getChartDataForMonth();
+    chart.data.datasets[0].data = data;
+    chart.data.datasets[0].label = Amount for ${selectedMonthKey};
+    chart.update();
+  }
+
+  function getChartDataForMonth() {
+    const data = expenseDataByMonth[selectedMonthKey] || { Salary: 0, Savings: 0, Expenses: 0 };
+    const balance = (data.Salary || 0) + (data.Savings || 0) - (data.Expenses || 0);
+    return [data.Salary || 0, data.Savings || 0, data.Expenses || 0, balance];
+  }
+
+  document.getElementById("signup-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const username = document.getElementById("signupUsername").value;
+    const password = document.getElementById("signupPassword").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
+    if (password !== confirmPassword) return alert("Passwords do not match!");
+    localStorage.setItem("user", JSON.stringify({ username, password }));
+    alert("Sign-up successful! Please log in.");
+    showLogin();
+  });
+
+  document.getElementById("login-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const username = document.getElementById("loginUsername").value;
+    const password = document.getElementById("loginPassword").value;
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    if (storedUser && storedUser.username === username && storedUser.password === password) {
+      localStorage.setItem("loggedIn", "true");
+      localStorage.setItem("loggedInUser", username);
+      showAvatarPage();
+    } else alert("Invalid credentials!");
+  });
+
+  function logout() {
+    localStorage.clear();
+    showHomePage();
+  }
+
+  window.onload = function () {
+    if (localStorage.getItem("loggedIn") === "true") {
+      showDashboard();
+    } else {
+      showHomePage();
+    }
+  };
+</script>
+</body>
+</html>
